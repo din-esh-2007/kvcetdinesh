@@ -59,14 +59,18 @@ createdb burnout_guardian
 # Update .env with your database credentials
 ```
 
-4. **Generate synthetic dataset**
+4. **Seed the database with Realistic Data**
 ```bash
-python backend/dataset_generator.py
+# Phase 1: Create 110 Users (10 Managers, 100 Employees)
+python backend/seed_data.py
+
+# Phase 2: Generate 14 days of behavioral history & AI Intelligence
+python backend/seed_activity.py
 ```
 
-5. **Run database migrations**
+5. **Start the backend server**
 ```bash
-python backend/database.py
+uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 6. **Start Redis**
