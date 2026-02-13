@@ -1,46 +1,94 @@
-"""
-Task API Routes
-"""
-
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, File, UploadFile, Form
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
+from datetime import datetime
+from loguru import logger
+import traceback
+
 from backend.database import get_db
 from backend.models.user_model import User
 from backend.models.management_model import Task, TaskLog
 from backend.services.auth_service import get_current_user, check_manager_role
-from pydantic import BaseModel
-from datetime import datetime
+from backend.services.email_service import send_assignment_email
 
 router = APIRouter(prefix="/api/tasks", tags=["Tasks"])
 
-class TaskCreate(BaseModel):
-    title: str
-    description: str
-    assigned_to_id: str
-    expected_hours: float
-    deadline: datetime
-    priority: str = "Medium"
-
-@router.post("/", status_code=status.HTTP_201_CREATED)
+@router.post("", status_code=status.HTTP_201_CREATED)
 async def create_task(
-    task_in: TaskCreate,
+    title: str = Form(...),
+    description: str = Form(...),
+    assigned_to_id: str = Form(...),
+    expected_hours: float = Form(...),
+    deadline: str = Form(...),
+    priority: str = Form("Medium"),
+    file: Optional[UploadFile] = File(None),
     manager: User = Depends(check_manager_role),
     db: Session = Depends(get_db)
 ):
-    """Manager only: Assign a task to an employee"""
-    new_task = Task(
-        title=task_in.title,
-        description=task_in.description,
-        manager_id=manager.id,
-        assigned_to_id=task_in.assigned_to_id,
-        expected_hours=task_in.expected_hours,
-        deadline=task_in.deadline,
-        priority=task_in.priority
-    )
-    db.add(new_task)
-    db.commit()
-    return {"status": "success", "task_id": new_task.id}
+    """Manager only: Assign a task with optional binary intelligence attachment"""
+    try:
+        # 1. Verify Asset
+        recipient = db.query(User).filter(User.id == assigned_to_id).first()
+        if not recipient:
+            raise HTTPException(status_code=404, detail="Target asset not found")
+
+        # Parse deadline
+        try:
+            # Handle ISO format from JavaScript
+            # JS toISOString returns YYYY-MM-DDTHH:mm:ss.sssZ
+            deadline_clean = deadline.replace('Z', '+00:00')
+            deadline_dt = datetime.fromisoformat(deadline_clean)
+        except Exception as e:
+            logger.warning(f"Deadline parsing fall-back: {e}")
+            deadline_dt = datetime.now()
+
+        # 2. Persist Task
+        new_task = Task(
+            title=title,
+            description=description,
+            manager_id=manager.id,
+            assigned_to_id=assigned_to_id,
+            expected_hours=expected_hours,
+            deadline=deadline_dt,
+            priority=priority
+        )
+        db.add(new_task)
+        db.commit()
+
+        # 3. Execute SMTP Dispatch with Intelligence
+        attachment_bytes = None
+        attachment_name = None
+        if file:
+            attachment_bytes = await file.read()
+            attachment_name = file.filename
+
+        # Intelligence Check: Is this a dummy domain?
+        if recipient.email.endswith("@burnoutguardian.ai"):
+            logger.warning(f"⚠️ TARGET ASSET {recipient.full_name} IS USING A DUMMY DOMAIN: {recipient.email}")
+
+        dispatch_status = await send_assignment_email(
+            recipient_email=recipient.email,
+            recipient_name=recipient.full_name,
+            task_title=title,
+            task_details=description,
+            deadline=deadline_dt.strftime("%Y-%m-%d %H:%M"),
+            attachment_data=attachment_bytes,
+            attachment_filename=attachment_name
+        )
+
+        if not dispatch_status:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="SMTP Dispatch Failure: The task was persisted, but the communication uplink failed. Check your authorized SMTP credentials in .env"
+            )
+
+        return {"status": "success", "task_id": new_task.id}
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        error_trace = traceback.format_exc()
+        logger.error(f"❌ TACTICAL DEPLOYMENT FAILURE: {str(e)}\n{error_trace}")
+        raise HTTPException(status_code=500, detail=f"Internal Intelligence Failure: {str(e)}")
 
 @router.get("/my-assignments")
 async def get_my_tasks(

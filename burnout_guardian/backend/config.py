@@ -95,6 +95,13 @@ class Settings(BaseSettings):
     RL_DISCOUNT_FACTOR: float = 0.95
     RL_EXPLORATION_RATE: float = 0.1
     
+    # SMTP Settings
+    SMTP_HOST: str = "smtp.gmail.com"
+    SMTP_PORT: int = 587
+    SMTP_USER: str = "demo@burnoutguardian.ai"
+    SMTP_PASSWORD: str = "strong-password-here"
+    SMTP_FROM: str = "operations@burnoutguardian.ai"
+
     # Logging
     LOG_LEVEL: str = "INFO"
     LOG_FILE: str = "logs/burnout_guardian.log"

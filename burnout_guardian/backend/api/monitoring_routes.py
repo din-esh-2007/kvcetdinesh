@@ -7,7 +7,7 @@ from backend.database import get_db
 from backend.models.user_model import User, DailyCheckIn
 from backend.models.stability_model import StabilityAssessment
 from backend.models.intervention_model import Intervention
-from backend.services.auth_service import check_admin_role
+from backend.services.auth_service import check_admin_role, get_current_user, check_manager_role
 
 router = APIRouter(prefix="/api/monitoring", tags=["Monitoring"])
 
@@ -76,3 +76,79 @@ async def get_chart_data(
         "risk": {r[0]: r[1] for r in risk_dist},
         "interventions": {r[0]: float(r[1]) for r in interventions}
     }
+
+@router.get("/manager-stats")
+async def get_manager_stats(
+    manager: User = Depends(check_manager_role),
+    db: Session = Depends(get_db)
+):
+    """Specific stats for a manager's direct reports"""
+    # 1. Get Team IDs
+    team_members = db.query(User).filter(User.manager_id == manager.id).all()
+    team_ids = [u.id for u in team_members]
+    
+    if not team_ids:
+        return {
+            "team_count": 0,
+            "avg_stability": 1.0,
+            "at_risk_count": 0,
+            "recent_checkins": []
+        }
+
+    # 2. Avg Team Stability
+    avg_stability = db.query(func.avg(StabilityAssessment.stability_index)).filter(
+        StabilityAssessment.user_id.in_(team_ids)
+    ).scalar() or 0.85
+
+    # 3. At Risk Members (High/Critical)
+    at_risk_count = db.query(StabilityAssessment).filter(
+        StabilityAssessment.user_id.in_(team_ids),
+        StabilityAssessment.risk_level.in_(["high", "critical"])
+    ).distinct(StabilityAssessment.user_id).count()
+
+    # 4. Recent Check-ins
+    recent_checkins = db.query(DailyCheckIn).filter(
+        DailyCheckIn.user_id.in_(team_ids)
+    ).order_by(DailyCheckIn.timestamp.desc()).limit(5).all()
+
+    return {
+        "team_count": len(team_ids),
+        "avg_stability": round(float(avg_stability), 2),
+        "at_risk_count": at_risk_count,
+        "recent_checkins": [
+            {
+                "user": next((u.full_name for u in team_members if u.id == c.user_id), "Unknown"),
+                "mood": c.emotional_state,
+                "workload": c.professional_workload,
+                "time": c.timestamp.strftime("%H:%M")
+            } for c in recent_checkins
+        ]
+    }
+
+@router.get("/manager-heatmap")
+async def get_manager_heatmap(
+    manager: User = Depends(check_manager_role),
+    db: Session = Depends(get_db)
+):
+    """Heatmap data for manager's team"""
+    team_members = db.query(User).filter(User.manager_id == manager.id).all()
+    team_ids = [u.id for u in team_members]
+    
+    # Mock heatmap data for now (hours of day vs day of week)
+    # In a real app, this would be derived from TaskLog entries
+    return {
+        "labels": ["Mon", "Tue", "Wed", "Thu", "Fri"],
+        "values": [random.randint(4, 10) for _ in range(5)]
+    }
+
+@router.get("/all-employees")
+async def list_all_employees(
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """List all employees for both Admin and Manager oversight"""
+    if user.role not in ["Admin", "Manager"]:
+        raise HTTPException(status_code=403, detail="Unauthorized access to workforce directory")
+        
+    employees = db.query(User).filter(User.role == "Employee").all()
+    return [u.to_dict() for u in employees]
