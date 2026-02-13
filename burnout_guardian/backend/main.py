@@ -21,7 +21,7 @@ from backend.database import get_db, init_db
 from loguru import logger
 
 # Import API routes
-from backend.api import auth_routes, admin_routes, task_routes, monitoring_routes
+from backend.api import auth_routes, admin_routes, task_routes, monitoring_routes, reporting_routes
 
 
 import asyncio
@@ -82,11 +82,119 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Mount static files
+from fastapi.staticfiles import StaticFiles
+app.mount("/frontend", StaticFiles(directory="frontend"), name="frontend")
+
 # Include Routers
 app.include_router(auth_routes.router)
 app.include_router(admin_routes.router)
 app.include_router(task_routes.router)
 app.include_router(monitoring_routes.router)
+app.include_router(reporting_routes.router)
+
+from backend.models.user_model import User
+from backend.services.auth_service import get_current_user
+
+@app.get("/api/analytics/stability/current")
+async def get_current_stability(
+    current_user: User = Depends(get_current_user),
+    days: int = 7,
+    db: Session = Depends(get_db)
+):
+    """Get stability for logged in user"""
+    try:
+        from backend.models.stability_model import StabilityAssessment
+        from sqlalchemy import and_
+        from datetime import timedelta
+        
+        end_date = datetime.utcnow()
+        start_date = end_date - timedelta(days=days)
+        
+        assessments = db.query(StabilityAssessment).filter(
+            and_(
+                StabilityAssessment.user_id == current_user.id,
+                StabilityAssessment.assessment_date >= start_date
+            )
+        ).order_by(StabilityAssessment.assessment_date.desc()).all()
+        
+        if not assessments:
+            return {
+                "user_id": current_user.id,
+                "message": "No stability data found",
+                "latest_assessment": {
+                    "stability_index": 0.75,
+                    "volatility": 0.2,
+                    "risk_probability": 0.25,
+                    "risk_level": "low",
+                    "top_contributors": []
+                },
+                "history": []
+            }
+        
+        latest = assessments[0]
+        
+        return {
+            "user_id": current_user.id,
+            "latest_assessment": {
+                "date": latest.assessment_date.isoformat(),
+                "stability_index": latest.stability_index,
+                "volatility": latest.volatility,
+                "risk_probability": latest.risk_probability,
+                "risk_level": latest.risk_level,
+                "top_contributors": latest.top_contributors
+            },
+            "history": [
+                {
+                    "date": a.assessment_date.isoformat(),
+                    "stability_index": a.stability_index,
+                    "risk_probability": a.risk_probability,
+                    "risk_level": a.risk_level
+                }
+                for a in assessments
+            ]
+        }
+        
+    except Exception as e:
+        logger.error(f"Error fetching stability data: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/analytics/forecast/current")
+async def get_current_forecast(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get forecast for logged in user"""
+    try:
+        from backend.models.forecast_model import BurnoutForecast
+        
+        forecast = db.query(BurnoutForecast).filter(
+            BurnoutForecast.user_id == current_user.id
+        ).order_by(BurnoutForecast.forecast_date.desc()).first()
+        
+        if not forecast:
+            return {
+                "user_id": current_user.id,
+                "message": "No forecast data available",
+                "forecast": None
+            }
+        
+        return {
+            "user_id": current_user.id,
+            "forecast_date": forecast.forecast_date.isoformat(),
+            "horizon_days": forecast.horizon_days,
+            "peak_risk_date": forecast.peak_risk_date.isoformat() if forecast.peak_risk_date else None,
+            "peak_risk_probability": forecast.peak_risk_probability,
+            "forecast_values": forecast.forecast_values,
+            "forecast_dates": forecast.forecast_dates,
+            "model_type": forecast.model_type,
+            "confidence_score": forecast.confidence_score
+        }
+        
+    except Exception as e:
+        logger.error(f"Error fetching forecast data: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # Health check endpoint

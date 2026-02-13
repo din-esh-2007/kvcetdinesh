@@ -7,8 +7,8 @@
     <title>Burnout Guardian - Real-Time Stability Dashboard</title>
     <meta name="description"
         content="Real-Time Autonomous Human Stability Control System - Monitor burnout risk and receive intelligent interventions">
-    <link rel="stylesheet" href="styles.css">
-    <script src="i18n.js"></script>
+    <link rel="stylesheet" href="/frontend/styles.css">
+    <script src="/frontend/i18n.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -81,7 +81,13 @@
                     <i data-lucide="smile" class="nav-icon"></i>
                     <span class="nav-label">Emotion Tracker</span>
                 </div>
-                <div class="nav-item" data-view="reports" title="System Reports">
+                <div class="nav-item" data-view="cv-scanner" title="Live CV Scanner" id="nav-cv-scanner">
+                    <i data-lucide="video" class="nav-icon"></i>
+                    <span class="nav-label">Live CV Scanner</span>
+                    <span class="badge"
+                        style="background: linear-gradient(135deg, #00d4ff, #0072ff); font-size: 0.6rem; padding: 2px 6px; margin-left: auto;">LIVE</span>
+                </div>
+                <div class="nav-item" data-view="reports" id="nav-reports" title="System Reports">
                     <i data-lucide="file-bar-chart" class="nav-icon"></i>
                     <span class="nav-label">Reports</span>
                 </div>
@@ -160,6 +166,47 @@
                         <p>Onboard a new employee to the human stability monitoring system.</p>
                     </div>
                 </div>
+
+                <!-- Admin Analytics Section -->
+                <section class="charts-grid" style="margin-bottom: 2rem;">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h2>Organizational Stability Horizon</h2>
+                            <div class="chart-controls">
+                                <button class="btn-small active">7D</button>
+                                <button class="btn-small">30D</button>
+                            </div>
+                        </div>
+                        <div class="chart-container" style="height: 300px;">
+                            <canvas id="adminStabilityChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h2>Personnel Risk Intensity</h2>
+                            <span class="badge warning">Detection Active</span>
+                        </div>
+                        <div class="chart-container" style="height: 300px;">
+                            <canvas id="adminRiskChart"></canvas>
+                        </div>
+                    </div>
+                </section>
+
+                <div class="chart-card" style="margin-bottom: 2rem; border-left: 4px solid var(--accent-cyan);">
+                    <div class="chart-header">
+                        <h2>Administrative Intelligence Terminal</h2>
+                        <span class="badge info">System Online</span>
+                    </div>
+                    <div class="checkin-content" style="display: flex; gap: 1rem; align-items: center;">
+                        <p style="flex: 2; color: var(--text-secondary);">Direct tactical oversight is available via the
+                            Manager Command Console for localized human asset intervention.</p>
+                        <button class="btn-primary" onclick="switchView('manager')"
+                            style="flex: 1; background: linear-gradient(135deg, #00d4ff, #0072ff); height: 50px;">
+                            <i data-lucide="layout-dashboard" style="margin-right: 8px;"></i> Open Manager Console
+                        </button>
+                    </div>
+                </div>
+
                 <div
                     style="margin-top: auto; padding-top: 2rem; border-top: 1px solid var(--border); text-align: center;">
                     <button class="btn-secondary" style="color: var(--error); border-color: rgba(239, 68, 68, 0.2);"
@@ -284,26 +331,59 @@
 
             <!-- Reports View -->
             <div id="view-reports" class="view-section">
-                <div class="chart-card">
-                    <div class="chart-header">
-                        <h2>Analytics Reports</h2>
+                <div class="view-header" style="margin-bottom: 2rem;">
+                    <h1>Analytical Intelligence Reports</h1>
+                    <p>High-Fidelity PDF Exports & Strategic Documentation</p>
+                </div>
+                <div class="data-grid" style="grid-template-columns: 1fr 1fr;">
+                    <div class="chart-card" style="border-top: 4px solid var(--accent-cyan);">
+                        <div class="chart-header">
+                            <h2>Organizational Intelligence (Aggregate)</h2>
+                        </div>
+                        <div class="checkin-content">
+                            <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Download a comprehensive
+                                overview of the entire workforce's stability index, risk distribution, and autonomous
+                                intervention effectiveness.</p>
+                            <button class="btn-primary full-width" onclick="downloadOrgReport()"
+                                style="background: linear-gradient(135deg, #00d4ff, #0072ff);">
+                                <i data-lucide="download" style="margin-right: 8px;"></i> Generate Full Org Report (PDF)
+                            </button>
+                        </div>
                     </div>
-                    <div class="log-content">
+                    <div class="chart-card" style="border-top: 4px solid var(--error);">
+                        <div class="chart-header">
+                            <h2>Targeted Asset Telemetry (Individual)</h2>
+                        </div>
+                        <div class="checkin-content">
+                            <p style="color: var(--text-muted); margin-bottom: 1rem;">Select an individual human asset
+                                to generate a high-resolution stability and prediction report.</p>
+                            <div class="form-group">
+                                <label>Target Asset</label>
+                                <select id="report-asset-select" class="btn-secondary full-width"
+                                    style="margin-bottom: 1rem;">
+                                    <option value="">Loading workforce...</option>
+                                </select>
+                            </div>
+                            <button class="btn-primary full-width" onclick="downloadEmployeeReport()"
+                                style="background: linear-gradient(135deg, #ff3b5c, #e11d48);">
+                                <i data-lucide="file-text" style="margin-right: 8px;"></i> Generate Asset Report (PDF)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart-card" style="margin-top: 2rem;">
+                    <div class="chart-header">
+                        <h2>Historical Data Archive</h2>
+                    </div>
+                    <div class="log-content" id="reports-list">
                         <div class="log-item">
                             <div class="log-icon">📊</div>
                             <div class="log-details">
-                                <h4>Weekly Stability Report</h4>
-                                <p>Generated for Feb 07 - Feb 13</p>
+                                <h4>Weekly Org Stability Baseline</h4>
+                                <p>Generated February 07, 2026</p>
                             </div>
-                            <button class="btn-small">Download</button>
-                        </div>
-                        <div class="log-item">
-                            <div class="log-icon">📈</div>
-                            <div class="log-details">
-                                <h4>Intervention Effectiveness</h4>
-                                <p>Quarterly analysis report</p>
-                            </div>
-                            <button class="btn-small">Download</button>
+                            <button class="btn-small">View Archive</button>
                         </div>
                     </div>
                 </div>
@@ -336,17 +416,17 @@
                             <div class="stat-change neutral">No change</div>
                         </div>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card" id="stat-card-interventions">
                         <div class="stat-icon interventions">🎯</div>
                         <div class="stat-content">
                             <h3 data-t="stats.active_interventions">Active Interventions</h3>
-                            <div class="stat-value" id="interventionCount">2</div>
+                            <div class="stat-value" id="interventionCount">0</div>
                             <div class="stat-change positive" data-t="stats.helping_recovery">Helping you recover</div>
                         </div>
                     </div>
                 </section>
 
-                <section class="charts-grid">
+                <section class="charts-grid" id="dashboard-stability-section">
                     <div class="chart-card full-width">
                         <div class="chart-header">
                             <h2 data-t="stats.stability_timeline">Stability Timeline</h2>
@@ -369,7 +449,7 @@
                         <div class="stat-icon stability">📅</div>
                         <div class="stat-content">
                             <h3>Next Peak Risk</h3>
-                            <div class="stat-value">Feb 18</div>
+                            <div class="stat-value" id="forecast-peak-date">Feb 18</div>
                             <div class="stat-change negative">Critical Threshold</div>
                         </div>
                     </div>
@@ -377,7 +457,7 @@
                         <div class="stat-icon risk">🛡️</div>
                         <div class="stat-content">
                             <h3>Confidence Score</h3>
-                            <div class="stat-value">92%</div>
+                            <div class="stat-value" id="forecast-confidence">92%</div>
                             <div class="stat-change positive">High Precision</div>
                         </div>
                     </div>
@@ -614,6 +694,188 @@
                     </div>
                 </div>
 
+                <!-- CV Scanner View (Employee Only) -->
+                <div id="view-cv-scanner" class="view-section">
+                    <div class="view-header" style="margin-bottom: 2rem;">
+                        <h1>🎥 Live CV Emotional Strain & Burnout Scanner</h1>
+                        <p>Real-Time Computer Vision Analysis for Emotional Stability Monitoring</p>
+                    </div>
+
+                    <!-- Privacy Consent Notice -->
+                    <div class="chart-card" id="cv-consent-notice"
+                        style="border-left: 4px solid var(--accent-cyan); margin-bottom: 2rem;">
+                        <div class="chart-header">
+                            <h2>⚠️ Privacy & Consent Notice</h2>
+                            <span class="badge info">Required Reading</span>
+                        </div>
+                        <div class="checkin-content">
+                            <p style="color: var(--text-secondary); line-height: 1.6; margin-bottom: 1rem;">
+                                This feature uses your webcam to analyze facial expressions and detect emotional strain
+                                indicators.
+                                <strong>No video or images are stored</strong> — only numeric emotion scores are logged
+                                for your wellness tracking.
+                            </p>
+                            <ul
+                                style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.8; margin-bottom: 1.5rem;">
+                                <li>✓ This is an <strong>opt-in feature</strong> — you must enable it each session</li>
+                                <li>✓ You can stop the scan at any time</li>
+                                <li>✓ Raw video frames are <strong>never transmitted or saved</strong></li>
+                                <li>✓ Only emotion probabilities and tension metrics are stored</li>
+                                <li>✓ This tool estimates emotional strain and is <strong>not a medical
+                                        diagnosis</strong></li>
+                            </ul>
+                            <button class="btn-primary full-width" onclick="enableCVScanner()"
+                                style="background: linear-gradient(135deg, #00d4ff, #0072ff);">
+                                <i data-lucide="video" style="margin-right: 8px;"></i> I Understand — Enable Live Scan
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- CV Scanner Interface (Hidden Initially) -->
+                    <div id="cv-scanner-interface" style="display: none;">
+                        <!-- Control Panel -->
+                        <div class="chart-card"
+                            style="margin-bottom: 2rem; background: linear-gradient(135deg, rgba(0, 212, 255, 0.05), rgba(0, 114, 255, 0.05));">
+                            <div class="chart-header">
+                                <h2>Scanner Controls</h2>
+                                <div style="display: flex; gap: 10px;">
+                                    <button id="cv-start-btn" class="btn-primary" onclick="startCVScan()">
+                                        <i data-lucide="play" style="margin-right: 6px;"></i> Start Scan
+                                    </button>
+                                    <button id="cv-stop-btn" class="btn-secondary" onclick="stopCVScan()"
+                                        style="display: none; background: rgba(239, 68, 68, 0.2); border-color: var(--error);">
+                                        <i data-lucide="stop-circle" style="margin-right: 6px;"></i> Stop Scan
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Main Scanner Grid -->
+                        <div class="data-grid" style="grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
+                            <!-- Left: Live Video Feed -->
+                            <div class="chart-card" style="background: #0a0a0f; border: 2px solid var(--accent-cyan);">
+                                <div class="chart-header">
+                                    <h2>Live Feed</h2>
+                                    <span class="badge" id="cv-status-badge"
+                                        style="background: var(--error);">INACTIVE</span>
+                                </div>
+                                <div
+                                    style="position: relative; width: 100%; aspect-ratio: 4/3; background: #000; border-radius: 8px; overflow: hidden;">
+                                    <video id="cv-video" autoplay playsinline
+                                        style="width: 100%; height: 100%; object-fit: cover;"></video>
+                                    <canvas id="cv-overlay"
+                                        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></canvas>
+                                    <div id="cv-placeholder"
+                                        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: var(--text-muted); font-size: 0.9rem;">
+                                        <div style="text-align: center;">
+                                            <i data-lucide="video-off"
+                                                style="width: 48px; height: 48px; margin-bottom: 10px; opacity: 0.5;"></i>
+                                            <p>Webcam feed will appear here</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Right: Real-Time Metrics -->
+                            <div class="chart-card">
+                                <div class="chart-header">
+                                    <h2>Emotion Distribution</h2>
+                                    <span class="badge success">LIVE</span>
+                                </div>
+                                <div class="chart-container" style="height: 250px;">
+                                    <canvas id="emotionPieChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Strain & Burnout Gauges -->
+                        <div class="stats-grid" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 2rem;">
+                            <div class="stat-card" style="border-left: 4px solid #fbbf24;">
+                                <p class="stat-label">Emotional Strain Index</p>
+                                <h2 class="stat-value" id="cv-strain-value" style="color: #fbbf24;">0</h2>
+                                <div class="stat-trend neutral" id="cv-strain-status">BASELINE</div>
+                            </div>
+                            <div class="stat-card" style="border-left: 4px solid #ef4444;">
+                                <p class="stat-label">Live Burnout Score</p>
+                                <h2 class="stat-value" id="cv-burnout-value" style="color: #ef4444;">0</h2>
+                                <div class="stat-trend neutral" id="cv-burnout-status">MONITORING</div>
+                            </div>
+                            <div class="stat-card" style="border-left: 4px solid var(--accent-cyan);">
+                                <p class="stat-label">Scan Confidence</p>
+                                <h2 class="stat-value" id="cv-confidence-value" style="color: var(--accent-cyan);">0%
+                                </h2>
+                                <div class="stat-trend neutral">ML MODEL</div>
+                            </div>
+                        </div>
+
+                        <!-- Micro-Tension Metrics -->
+                        <div class="chart-card" style="margin-bottom: 2rem;">
+                            <div class="chart-header">
+                                <h2>Micro-Tension Indicators</h2>
+                                <span class="badge info">Facial Landmarks</span>
+                            </div>
+                            <div class="checkin-content">
+                                <div class="stats-grid" style="grid-template-columns: repeat(3, 1fr);">
+                                    <div class="checkin-metric">
+                                        <label>Brow Tension</label>
+                                        <div style="display: flex; align-items: center; gap: 10px;">
+                                            <div
+                                                style="flex: 1; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden;">
+                                                <div id="cv-brow-bar"
+                                                    style="height: 100%; width: 0%; background: linear-gradient(90deg, #10b981, #fbbf24, #ef4444); transition: width 0.3s;">
+                                                </div>
+                                            </div>
+                                            <span id="cv-brow-value"
+                                                style="font-size: 0.9rem; color: var(--text-secondary);">0%</span>
+                                        </div>
+                                    </div>
+                                    <div class="checkin-metric">
+                                        <label>Jaw Tension</label>
+                                        <div style="display: flex; align-items: center; gap: 10px;">
+                                            <div
+                                                style="flex: 1; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden;">
+                                                <div id="cv-jaw-bar"
+                                                    style="height: 100%; width: 0%; background: linear-gradient(90deg, #10b981, #fbbf24, #ef4444); transition: width 0.3s;">
+                                                </div>
+                                            </div>
+                                            <span id="cv-jaw-value"
+                                                style="font-size: 0.9rem; color: var(--text-secondary);">0%</span>
+                                        </div>
+                                    </div>
+                                    <div class="checkin-metric">
+                                        <label>Eye Fatigue</label>
+                                        <div style="display: flex; align-items: center; gap: 10px;">
+                                            <div
+                                                style="flex: 1; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden;">
+                                                <div id="cv-eye-bar"
+                                                    style="height: 100%; width: 0%; background: linear-gradient(90deg, #10b981, #fbbf24, #ef4444); transition: width 0.3s;">
+                                                </div>
+                                            </div>
+                                            <span id="cv-eye-value"
+                                                style="font-size: 0.9rem; color: var(--text-secondary);">0%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Explanation Panel -->
+                        <div class="chart-card" style="border-left: 4px solid #10b981;">
+                            <div class="chart-header">
+                                <h2>AI Analysis & Insights</h2>
+                                <span class="badge success">ACTIVE</span>
+                            </div>
+                            <div class="checkin-content">
+                                <div id="cv-explanation-box"
+                                    style="min-height: 100px; color: var(--text-secondary); line-height: 1.8;">
+                                    <p style="color: var(--text-muted); font-style: italic;">Waiting for scan to
+                                        begin...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Footer Moved Inside Content for No Overlap -->
                 <footer class="footer"
                     style="background: var(--bg-card); border-top: 1px solid var(--border); padding: 30px; margin-top: 60px; text-align: center; color: var(--text-muted); font-size: 0.75rem; border-radius: var(--radius-lg); position: relative; z-index: 1;">
@@ -806,7 +1068,8 @@
         </div>
     </div>
 
-    <script src="app.js"></script>
+    <script src="/frontend/app.js"></script>
+    <script src="/frontend/cv_scanner.js"></script>
 </body>
 
 </html>
