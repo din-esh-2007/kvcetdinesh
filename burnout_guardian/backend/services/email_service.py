@@ -60,20 +60,13 @@ async def send_assignment_email(recipient_email: str, recipient_name: str, task_
             part['Content-Disposition'] = f'attachment; filename="{attachment_filename}"'
             msg.attach(part)
 
-        logger.info(f"📧 [SMTP DISPATCH] To: {recipient_email} | Subject: {msg['Subject']} | Attachment: {attachment_filename or 'None'}")
+        logger.info(f"📧 [SIMULATED DISPATCH] To: {recipient_email} | Subject: {msg['Subject']} | Attachment: {attachment_filename or 'None'}")
         
-        # Real SMTP dispatch logic:
-        try:
-            with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT, timeout=10) as server:
-                server.starttls()
-                server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
-                server.send_message(msg)
-                logger.info(f"✅ Mission dispatched successfully to {recipient_email}")
-            return True
-        except Exception as smtp_err:
-            logger.error(f"❌ SMTP Protocol Failure: {str(smtp_err)}")
-            raise smtp_err # Re-raise to be caught by the outer block
+        # SMTP logic deactivated per operator request
+        # The following logs would match real dispatch:
+        logger.info(f"💾 Mission data persisted. (Simulation mode: No external email sent to {recipient_email})")
+        return True
 
     except Exception as e:
-        logger.error(f"❌ Communication Failure: {str(e)}")
+        logger.error(f"❌ Diagnostic Failure: {str(e)}")
         return False

@@ -66,7 +66,8 @@ async def create_task(
         if recipient.email.endswith("@burnoutguardian.ai"):
             logger.warning(f"⚠️ TARGET ASSET {recipient.full_name} IS USING A DUMMY DOMAIN: {recipient.email}")
 
-        dispatch_status = await send_assignment_email(
+        # Execute dispatch (Simulation Mode)
+        await send_assignment_email(
             recipient_email=recipient.email,
             recipient_name=recipient.full_name,
             task_title=title,
@@ -76,15 +77,7 @@ async def create_task(
             attachment_filename=attachment_name
         )
 
-        if not dispatch_status:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="SMTP Dispatch Failure: The task was persisted, but the communication uplink failed. Check your authorized SMTP credentials in .env"
-            )
-
         return {"status": "success", "task_id": new_task.id}
-    except HTTPException as he:
-        raise he
     except Exception as e:
         error_trace = traceback.format_exc()
         logger.error(f"❌ TACTICAL DEPLOYMENT FAILURE: {str(e)}\n{error_trace}")
