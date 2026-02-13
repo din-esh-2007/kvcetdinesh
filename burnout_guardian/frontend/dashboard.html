@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Burnout Guardian - Real-Time Stability Dashboard</title>
+    <meta name="description"
+        content="Real-Time Autonomous Human Stability Control System - Monitor burnout risk and receive intelligent interventions">
+    <link rel="stylesheet" href="styles.css">
+    <script src="i18n.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body class="theme-premium">
+    <!-- Login Overlay -->
+    <div id="login-overlay" class="login-overlay active">
+        <div class="login-card">
+            <div class="logo">
+                <span class="logo-icon">🧠</span>
+                <h1 data-t="login.title">Burnout Guardian</h1>
+            </div>
+            <p data-t="login.subtitle">Predictive Human Stability Control System</p>
+            <div class="checkin-content" style="margin-top: 2rem;">
+                <input type="text" id="login-username" class="btn-secondary full-width" data-t="login.username"
+                    placeholder="Username / Employee ID">
+                <input type="password" id="login-password" class="btn-secondary full-width" data-t="login.password"
+                    placeholder="Security Key">
+                <button class="btn-primary full-width" onclick="handleLogin()" data-t="login.button">Authorize
+                    Access</button>
+                <div id="login-error" data-t="login.error"
+                    style="color: var(--error); font-size: 0.8rem; text-align: center; margin-top: 10px; display: none;">
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <div class="logo-icon">🧠</div>
+                <div class="logo-text">
+                    <h1 data-t="dashboard">Dashboard</h1>
+                    <p>Burnout & Focus Guardian</p>
+                </div>
+            </div>
+            <div class="header-actions">
+                <div class="status-indicator">
+                    <span class="status-dot"></span>
+                    <span>System Active</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Dashboard -->
+    <main class="dashboard">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <nav class="nav-menu">
+                <div class="nav-item active" data-view="dashboard">
+                    <span class="nav-icon">📊</span>
+                    <span data-t="dashboard">Dashboard</span>
+                </div>
+                <div class="nav-item" data-view="forecast">
+                    <span class="nav-icon">📈</span>
+                    <span data-t="forecast">Forecast</span>
+                </div>
+                <div class="nav-item" data-view="interventions">
+                    <span class="nav-icon">💊</span>
+                    <span data-t="interventions">Interventions</span>
+                </div>
+                <div class="nav-item" data-view="manager">
+                    <span class="nav-icon">👥</span>
+                    <span data-t="roles.manager">Manager</span>
+                </div>
+                <div class="nav-item" data-view="admin">
+                    <span class="nav-icon">🔐</span>
+                    <span data-t="roles.admin">Admin</span>
+                </div>
+                <div class="nav-item" data-view="emotion">
+                    <span class="nav-icon">😊</span>
+                    <span>Emotion Tracker</span>
+                </div>
+                <div class="nav-item" data-view="reports">
+                    <span class="nav-icon">📄</span>
+                    <span>Reports</span>
+                </div>
+                <div class="nav-item" data-view="checkin">
+                    <span class="nav-icon">📝</span>
+                    <span>Daily Check-In</span>
+                </div>
+            </nav>
+
+            <div class="sidebar-bottom">
+                <div class="user-profile">
+                    <img src="https://ui-avatars.com/api/?name=Demo+User&background=00d4ff&color=fff" alt="Profile"
+                        class="profile-img">
+                    <div class="user-info">
+                        <h4>EMP0001</h4>
+                        <p>Active</p>
+                    </div>
+                </div>
+                <div class="nav-item" data-view="settings">
+                    <span class="nav-icon">⚙️</span>
+                    <span data-t="settings">Settings</span>
+                </div>
+                <div class="nav-item" onclick="handleLogout()" style="margin-top: 5px; color: var(--error);">
+                    <span class="nav-icon">🚪</span>
+                    <span data-t="logout">Logout</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Content Area -->
+        <div class="content">
+            <!-- Admin View -->
+            <!-- Admin View -->
+            <div id="view-admin" class="view-section">
+                <div class="view-header" style="margin-bottom: 2rem;">
+                    <h1 data-t="roles.admin">Administrator</h1>
+                    <p>System User Management & Autonomous Oversight</p>
+                </div>
+
+                <!-- System Overview -->
+                <div class="stats-grid" style="grid-template-columns: repeat(4, 1fr); margin-bottom: 2rem;">
+                    <div class="stat-card">
+                        <p class="stat-label">Total Human Assets</p>
+                        <h2 class="stat-value" id="total-assets">0</h2>
+                        <div class="stat-trend neutral">ACTIVE Monitoring</div>
+                    </div>
+                    <div class="stat-card">
+                        <p class="stat-label">High Risk Alerts (24h)</p>
+                        <h2 class="stat-value" id="high-risk-alerts" style="color: var(--error);">0</h2>
+                        <div class="stat-trend error">AI DETECTION</div>
+                    </div>
+                    <div class="stat-card">
+                        <p class="stat-label">Autonomous Interventions</p>
+                        <h2 class="stat-value" id="autonomous-interventions" style="color: var(--accent-cyan);">0</h2>
+                        <div class="stat-trend success">ACTIVE PROTECTION</div>
+                    </div>
+                    <div class="stat-card">
+                        <p class="stat-label">Org Stability Index</p>
+                        <h2 class="stat-value" id="org-stability">0.0</h2>
+                        <div class="stat-trend neutral">BASELINE AVG</div>
+                    </div>
+                </div>
+
+                <!-- Admin Action Panel -->
+                <div id="admin-actions" class="data-grid" style="margin-bottom: 2rem;">
+                    <div class="chart-card action-card" onclick="showUserForm('Manager')">
+                        <div class="action-icon">➕</div>
+                        <h3 data-t="admin.add_manager">Add Manager</h3>
+                        <p>Create a new administrative manager profile with full authority.</p>
+                    </div>
+                    <div class="chart-card action-card" onclick="showUserForm('Employee')">
+                        <div class="action-icon">👤</div>
+                        <h3 data-t="admin.add_employee">Add Employee</h3>
+                        <p>Onboard a new employee to the human stability monitoring system.</p>
+                    </div>
+                </div>
+
+                <!-- Comprehensive User Creation Form (Hidden by default) -->
+                <div id="user-creation-form" class="chart-card" style="display: none; margin-bottom: 2rem;">
+                    <div class="chart-header">
+                        <h2 id="form-title">User Creation Form</h2>
+                        <button class="btn-small" onclick="hideUserForm()">Cancel</button>
+                    </div>
+                    <div class="checkin-content">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label data-t="admin.full_name">Full Name</label>
+                                <input type="text" id="user-fullname" class="btn-secondary full-width"
+                                    placeholder="John Doe">
+                            </div>
+                            <div class="form-group">
+                                <label data-t="admin.email">Email</label>
+                                <input type="email" id="user-email" class="btn-secondary full-width"
+                                    placeholder="john@example.com">
+                            </div>
+                            <div class="form-group">
+                                <label data-t="admin.mobile">Mobile Number</label>
+                                <input type="tel" id="user-mobile" class="btn-secondary full-width"
+                                    placeholder="+91 ...">
+                            </div>
+                            <div class="form-group">
+                                <label data-t="admin.gender">Gender</label>
+                                <select id="user-gender" class="btn-secondary full-width">
+                                    <option value="Male" data-t="admin.male">Male</option>
+                                    <option value="Female" data-t="admin.female">Female</option>
+                                    <option value="Other" data-t="admin.other">Other</option>
+                                </select>
+                            </div>
+                            <div class="form-group full-width" style="grid-column: span 2;">
+                                <label data-t="admin.address">Address</label>
+                                <textarea id="user-address" class="btn-secondary full-width"
+                                    placeholder="Full residential address" rows="2"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label data-t="admin.dob">Date of Birth</label>
+                                <input type="date" id="user-dob" class="btn-secondary full-width">
+                            </div>
+                            <div class="form-group">
+                                <label data-t="admin.department">Department</label>
+                                <select id="user-department" class="btn-secondary full-width">
+                                    <option value="IT">IT & Infrastructure</option>
+                                    <option value="HR">Human Resources</option>
+                                    <option value="ENG">Engineering</option>
+                                    <option value="SALES">Sales & Marketing</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label data-t="admin.employment_type">Employment Type</label>
+                                <select id="user-employment-type" class="btn-secondary full-width">
+                                    <option value="Full-Time">Full-Time</option>
+                                    <option value="Part-Time">Part-Time</option>
+                                    <option value="Contract">Contract</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label data-t="admin.emergency_contact">Emergency Contact</label>
+                                <input type="text" id="user-emergency" class="btn-secondary full-width"
+                                    placeholder="Name / Phone">
+                            </div>
+                            <div class="form-group">
+                                <label data-t="admin.joining_date">Joining Date</label>
+                                <input type="date" id="user-joining" class="btn-secondary full-width">
+                            </div>
+                            <div class="form-group">
+                                <label data-t="admin.username">Username</label>
+                                <input type="text" id="user-username" class="btn-secondary full-width"
+                                    placeholder="jdoe123">
+                            </div>
+                            <div class="form-group" style="grid-column: span 2;">
+                                <label data-t="admin.password">Password</label>
+                                <input type="password" id="user-password" class="btn-secondary full-width"
+                                    placeholder="••••••••">
+                            </div>
+                        </div>
+                        <button class="btn-primary full-width" style="margin-top: 1rem;"
+                            onclick="submitUserForm()">Create Security Profile</button>
+                    </div>
+                </div>
+
+                <div class="data-grid">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h2 data-t="admin.manage_managers">Manage Managers</h2>
+                        </div>
+                        <div class="checkin-content">
+                            <div class="manager-list" id="managerList"
+                                style="margin-bottom: 10px; max-height: 120px; overflow-y: auto; border: 1px solid var(--border); border-radius: 4px; padding: 5px;">
+                                <div
+                                    style="display: flex; justify-content: space-between; padding: 5px; background: rgba(255,255,255,0.05); margin-bottom: 2px; border-radius: 4px;">
+                                    <span>Demo Manager (MGR001)</span>
+                                    <button class="btn-small" style="color: var(--error); padding: 2px 6px;"
+                                        onclick="removeManager('MGR001')">✕</button>
+                                </div>
+                            </div>
+                            <input type="text" class="btn-secondary full-width" placeholder="Search Manager ID...">
+                        </div>
+                    </div>
+
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h2 data-t="admin.suspension">Human Stability Suspension</h2>
+                        </div>
+                        <div class="checkin-content">
+                            <select class="btn-secondary full-width">
+                                <option data-t="admin.select_human">Select Human Asset...</option>
+                            </select>
+                            <div style="display: flex; gap: 10px;">
+                                <input type="date" class="btn-secondary" style="flex: 1;">
+                                <input type="date" class="btn-secondary" style="flex: 1;">
+                            </div>
+                            <textarea class="btn-secondary full-width" data-t="admin.reason"
+                                placeholder="Reason for Stability Pause" rows="2"></textarea>
+                            <button class="btn-primary full-width" data-t="admin.execute">Execute Suspension</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- User Directory Section -->
+                <div class="chart-card full-width" style="margin-top: 2rem;">
+                    <div class="chart-header">
+                        <h2>Human Asset Directory</h2>
+                        <div style="display: flex; gap: 10px;">
+                            <input type="text" id="userDirectorySearch" class="btn-secondary"
+                                placeholder="Search Assets..." style="min-width: 250px;">
+                        </div>
+                    </div>
+                    <div class="checkin-content directory-container">
+                        <table class="directory-table">
+                            <thead>
+                                <tr>
+                                    <th>Asset Name</th>
+                                    <th>Role</th>
+                                    <th>Employee ID</th>
+                                    <th>Email</th>
+                                    <th>Department</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="userDirectoryBody">
+                                <!-- Populated by JS -->
+                                <tr>
+                                    <td colspan="6" style="text-align:center; padding: 2rem; color: var(--text-muted);">
+                                        Syncing Asset Data...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Manager View -->
+            <div id="view-manager" class="view-section">
+                <div class="view-header" style="margin-bottom: 2rem;">
+                    <h1 data-t="roles.manager">Manager</h1>
+                    <p>Operational Continuity & Task Optimization</p>
+                </div>
+                <div class="data-grid">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h2 data-t="manager.delegation">Task Delegation</h2>
+                        </div>
+                        <div class="checkin-content">
+                            <input type="text" class="btn-secondary full-width" data-t="manager.objective"
+                                placeholder="Task Objective">
+                            <div style="display: flex; gap: 10px;">
+                                <input type="number" class="btn-secondary" style="flex: 1;"
+                                    data-t="manager.exp_volatility" placeholder="Expected Volatility (Hrs)">
+                                <input type="date" class="btn-secondary" style="flex: 1;">
+                            </div>
+                            <select class="btn-secondary full-width">
+                                <option data-t="manager.delegate_to">Delegate to...</option>
+                            </select>
+                            <button class="btn-primary full-width" data-t="manager.deploy">Deploy Task</button>
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h2 data-t="manager.heatmap">Burnout Heatmap</h2>
+                        </div>
+                        <div class="chart-container" style="height: 250px;">
+                            <canvas id="burnoutHeatmap"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reports View -->
+            <div id="view-reports" class="view-section">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h2>Analytics Reports</h2>
+                    </div>
+                    <div class="log-content">
+                        <div class="log-item">
+                            <div class="log-icon">📊</div>
+                            <div class="log-details">
+                                <h4>Weekly Stability Report</h4>
+                                <p>Generated for Feb 07 - Feb 13</p>
+                            </div>
+                            <button class="btn-small">Download</button>
+                        </div>
+                        <div class="log-item">
+                            <div class="log-icon">📈</div>
+                            <div class="log-details">
+                                <h4>Intervention Effectiveness</h4>
+                                <p>Quarterly analysis report</p>
+                            </div>
+                            <button class="btn-small">Download</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard View -->
+            <div id="view-dashboard" class="view-section active">
+                <section class="hero-stats">
+                    <div class="stat-card">
+                        <div class="stat-icon stability">🛡️</div>
+                        <div class="stat-content">
+                            <h3>Stability Index</h3>
+                            <div class="stat-value" id="stabilityValue">0.72</div>
+                            <div class="stat-change positive">+0.05 from yesterday</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon risk">⚠️</div>
+                        <div class="stat-content">
+                            <h3>Risk Probability</h3>
+                            <div class="stat-value" id="riskValue">34%</div>
+                            <div class="stat-change negative">+8% from yesterday</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon volatility">📉</div>
+                        <div class="stat-content">
+                            <h3>Volatility</h3>
+                            <div class="stat-value" id="volatilityValue">0.28</div>
+                            <div class="stat-change neutral">No change</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon interventions">🎯</div>
+                        <div class="stat-content">
+                            <h3 data-t="stats.active_interventions">Active Interventions</h3>
+                            <div class="stat-value" id="interventionCount">2</div>
+                            <div class="stat-change positive" data-t="stats.helping_recovery">Helping you recover</div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="charts-grid">
+                    <div class="chart-card full-width">
+                        <div class="chart-header">
+                            <h2 data-t="stats.stability_timeline">Stability Timeline</h2>
+                            <div class="chart-controls">
+                                <button class="btn-small active" data-range="7d">7D</button>
+                                <button class="btn-small" data-range="30d">30D</button>
+                            </div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="stabilityChart"></canvas>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Forecast View -->
+            <div id="view-forecast" class="view-section">
+                <section class="hero-stats">
+                    <div class="stat-card">
+                        <div class="stat-icon stability">📅</div>
+                        <div class="stat-content">
+                            <h3>Next Peak Risk</h3>
+                            <div class="stat-value">Feb 18</div>
+                            <div class="stat-change negative">Critical Threshold</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon risk">🛡️</div>
+                        <div class="stat-content">
+                            <h3>Confidence Score</h3>
+                            <div class="stat-value">92%</div>
+                            <div class="stat-change positive">High Precision</div>
+                        </div>
+                    </div>
+                </section>
+                <section class="charts-grid">
+                    <div class="chart-card full-width">
+                        <div class="chart-header">
+                            <h2>7-Day Predictive Flux</h2>
+                            <span class="badge warning">Moderate Transition Risk</span>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="forecastChart"></canvas>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Interventions View -->
+            <div id="view-interventions" class="view-section">
+                <div class="data-grid">
+                    <div class="log-card">
+                        <div class="log-header">
+                            <h2>Active Stability Measures</h2>
+                        </div>
+                        <div class="log-content" id="interventionLog">
+                            <!-- Populated by JavaScript -->
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h2>Intervention Impact</h2>
+                        </div>
+                        <div class="checkin-content">
+                            <div class="checkin-metric">
+                                <label>Workload Reduction</label>
+                                <span class="badge success">-15% Stress</span>
+                            </div>
+                            <div class="checkin-metric">
+                                <label>Recovery Efficiency</label>
+                                <span class="badge info">+22% Stability</span>
+                            </div>
+                            <div class="checkin-metric">
+                                <label>Focus Restoration</label>
+                                <span class="badge positive">+1.2 hrs Focus</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Daily Check-In View -->
+            <div id="view-checkin" class="view-section">
+                <div class="data-grid">
+                    <div class="checkin-card">
+                        <div class="checkin-header">
+                            <h2>Daily Check-In</h2>
+                        </div>
+                        <div class="checkin-content">
+                            <div class="checkin-metric">
+                                <label>Sleep Quality (0-12 hrs)</label>
+                                <input type="range" min="0" max="12" step="0.5" value="7.5" class="full-width">
+                            </div>
+                            <div class="checkin-metric">
+                                <label>Emotional State (1-10)</label>
+                                <input type="range" min="1" max="10" step="1" value="7" class="full-width">
+                            </div>
+                            <div class="checkin-metric">
+                                <label>Professional Workload (1-10)</label>
+                                <input type="range" min="1" max="10" step="1" value="5" class="full-width">
+                            </div>
+                            <button class="btn-primary full-width">Submit Data Point</button>
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h2>Self-Reported Trends</h2>
+                        </div>
+                        <div class="checkin-content">
+                            <p style="color: var(--text-secondary); font-size: 0.9rem;">Consistent data entry improves
+                                AI forecasting accuracy by 35%.</p>
+                            <div class="stat-change positive">✓ 5 Day Streak Active</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Emotion Tracker View -->
+            <div id="view-emotion" class="view-section">
+                <section class="charts-grid">
+                    <div class="chart-card full-width">
+                        <div class="chart-header">
+                            <h2>Computer Vision Emotion Stream</h2>
+                            <span class="badge info">Real-Time Analysis</span>
+                        </div>
+                        <div class="emotion-content">
+                            <div class="chart-container">
+                                <canvas id="emotionChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Settings View -->
+            <div id="view-settings" class="view-section">
+                <div class="data-grid">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h2>System Controls</h2>
+                        </div>
+                        <div class="checkin-content">
+                            <div class="checkin-metric settings-stack">
+                                <label data-t="settings_view.theme">Interface Theme</label>
+                                <div class="theme-switcher">
+                                    <button class="btn-small active" onclick="setTheme('premium')">Premium</button>
+                                    <button class="btn-small" onclick="setTheme('dark')">Black</button>
+                                    <button class="btn-small" onclick="setTheme('light')">White</button>
+                                </div>
+                            </div>
+                            <div class="checkin-metric settings-stack">
+                                <label data-t="settings_view.language">Interface Language</label>
+                                <select class="btn-secondary full-width" onchange="I18N.setLanguage(this.value)">
+                                    <option value="en">English</option>
+                                    <option value="ta">Tamil (தமிழ்)</option>
+                                    <option value="hi">Hindi (हिन्दी)</option>
+                                </select>
+                            </div>
+                            <div class="checkin-metric settings-stack">
+                                <label data-t="settings_view.autonomous">Autonomous Decision Engine</label>
+                                <input type="checkbox" checked>
+                            </div>
+                            <div class="checkin-metric settings-stack">
+                                <label data-t="settings_view.privacy">Privacy Safeguards</label>
+                                <input type="checkbox" checked disabled>
+                            </div>
+                        </div>
+                        <button class="btn-secondary full-width" data-t="settings_view.recalibrate">Recalibrate
+                            Volatility Baseline</button>
+                        <button class="btn-secondary full-width" style="margin-top: 10px;"
+                            data-t="settings_view.reset_emotion">Reset Emotion Baseline</button>
+                    </div>
+                </div>
+
+                <!-- System Archive Section -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h2>System Archive</h2>
+                        <span class="badge info">Data Retention</span>
+                    </div>
+                    <div class="checkin-content">
+                        <div class="checkin-metric">
+                            <label>Archive Frequency</label>
+                            <select class="btn-secondary" style="padding: 4px 8px; font-size: 0.8rem;">
+                                <option>Daily</option>
+                                <option selected>Weekly</option>
+                                <option>Monthly</option>
+                            </select>
+                        </div>
+                        <div class="checkin-metric">
+                            <label>Last Archive</label>
+                            <span style="font-size: 0.875rem; color: var(--text-secondary);">Feb 12, 2026</span>
+                        </div>
+                        <button class="btn-primary full-width" style="margin-top: 10px;">Archive Now</button>
+                        <button class="btn-small full-width" style="margin-top: 5px;">Clear Old Data</button>
+                    </div>
+                </div>
+
+                <!-- Footer Moved Inside Content for No Overlap -->
+                <footer class="footer"
+                    style="background: var(--bg-card); border-top: 1px solid var(--border); padding: 30px; margin-top: 60px; text-align: center; color: var(--text-muted); font-size: 0.75rem; border-radius: var(--radius-lg); position: relative; z-index: 1;">
+                    <p>Burnout Guardian v1.0 | Aligned with UN SDG 3 & SDG 8 | Privacy-First Design</p>
+                </footer>
+            </div>
+        </div>
+    </main>
+
+    <div class="bottom-nav">
+        <div class="bottom-nav-item active" data-view="dashboard" title="Home">
+            <span class="nav-icon">🏠</span>
+        </div>
+        <div class="bottom-nav-item" data-view="forecast" title="Stability">
+            <span class="nav-icon">❤️</span>
+        </div>
+        <div class="bottom-nav-item add-btn" title="Add" id="quickAddBtn">
+            <span class="nav-icon">➕</span>
+        </div>
+        <div class="bottom-nav-item" data-view="reports" title="Notifications">
+            <span class="nav-icon">🔔</span>
+        </div>
+        <div class="bottom-nav-item" data-view="settings" title="Profile">
+            <span class="nav-icon">👤</span>
+        </div>
+    </div>
+
+    <!-- Global Footer Removed from here -->
+    <script src="app.js"></script>
+</body>
+
+</html>

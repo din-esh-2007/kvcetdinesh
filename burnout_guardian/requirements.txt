@@ -1,0 +1,76 @@
+# Core Framework
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+python-multipart==0.0.6
+
+# Database
+sqlalchemy==2.0.25
+psycopg2-binary==2.9.9
+alembic==1.13.1
+
+# Redis & Caching
+redis==5.0.1
+celery==5.3.6
+
+# Authentication & Security
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+python-dotenv==1.0.0
+pydantic==2.5.3
+pydantic-settings==2.1.0
+
+# Machine Learning
+scikit-learn==1.4.0
+numpy==1.26.3
+pandas==2.1.4
+scipy==1.11.4
+
+# Time Series Forecasting
+prophet==1.1.5
+statsmodels==0.14.1
+
+# Deep Learning
+torch==2.1.2
+torchvision==0.16.2
+
+# Computer Vision & Emotion Detection
+opencv-python==4.9.0.80
+deepface==0.0.79
+tf-keras==2.15.0
+tensorflow==2.15.0
+
+# Calendar Integration
+google-auth==2.27.0
+google-auth-oauthlib==1.2.0
+google-auth-httplib2==0.2.0
+google-api-python-client==2.116.0
+
+# PDF Generation
+reportlab==4.0.9
+matplotlib==3.8.2
+seaborn==0.13.1
+plotly==5.18.0
+kaleido==0.2.1
+
+# HTTP & API
+httpx==0.26.0
+requests==2.31.0
+
+# Data Validation
+pydantic-extra-types==2.4.1
+
+# Utilities
+python-dateutil==2.8.2
+pytz==2023.3.post1
+tqdm==4.66.1
+
+# Logging & Monitoring
+loguru==0.7.2
+
+# Testing
+pytest==7.4.4
+pytest-asyncio==0.23.3
+pytest-cov==4.1.0
+
+# CORS
+fastapi-cors==0.0.6
